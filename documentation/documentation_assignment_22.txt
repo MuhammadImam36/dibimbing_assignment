@@ -1,0 +1,35 @@
+Assignment Day 22 - Batch Processing with PySpark - Create Airflow DAGs with PySpark
+=============================================================
+
+1. Alur Kerja DAG Airflow
+--------------------------
+DAG memiliki alur kerja linear sederhana sebagai berikut:
+
+    start >> etl >> end
+
+- `start` merupakan `EmptyOperator` yang berfungsi sebagai titik awal eksekusi DAG.
+- `etl` adalah `SparkSubmitOperator` yang menjalankan script Spark dengan cara melakukan submit ke container Spark. Script ini berisi proses ETL dan analisis data.
+- `end` merupakan `EmptyOperator` yang menandai berakhirnya proses eksekusi DAG.
+
+2. Proses ETL
+-------------
+Script Spark yang dijalankan pada task `etl` melakukan tahapan-tahapan berikut:
+
+- Membuat objek `SparkSession`.
+- Membaca tabel dari PostgreSQL dan memuatnya ke dalam DataFrame Spark menggunakan koneksi JDBC.
+- Melakukan pembersihan data (cleaning) dan transformasi, seperti menghapus nilai yang tidak valid dan mengekstrak fitur waktu (year, month, day, dll).
+- Melakukan analisis batch terhadap data yang telah dibersihkan.
+- Mencetak hasil analisis ke console dan menyimpannya dalam file berformat `.csv`.
+
+3. Analisis Batch - Segmentasi Pelanggan RFM
+--------------------------------------------
+**Use Case:** Segmentasi pelanggan menggunakan metode analisis RFM (Recency, Frequency, Monetary).
+
+- Analisis dilakukan dengan membuat temporary view dari DataFrame yang telah dibersihkan dan ditransformasi.
+- Menghitung metrik RFM menggunakan query SQL dengan struktur CTE (Common Table Expression).
+- Setiap metrik RFM (Recency, Frequency, dan Monetary) diberi skor dari 1 hingga 3 berdasarkan nilai distribusinya dan ambang batas (threshold) yang telah ditentukan sebelumnya.
+- Skor RFM kemudian dijumlahkan untuk mendapatkan total RFM Score untuk setiap pelanggan.
+- Pelanggan diklasifikasikan ke dalam tiga segmen berdasarkan RFM Score:
+  - `High Value` jika skor RFM ≥ 8
+  - `Mid Value` jika skor RFM ≥ 5 dan < 8
+  - `Low Value` jika skor RFM < 5
